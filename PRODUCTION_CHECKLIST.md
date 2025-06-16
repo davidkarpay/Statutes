@@ -13,7 +13,7 @@ This checklist tracks the implementation status of all required features for a r
 - [x] Error handling (network, DB)
 - [x] Full title coverage (all 49 titles)
 - [x] Progress feedback (percentage, ETA)
-- [ ] Resumability (track progress, skip completed, restart after interruption)
+- [x] Resumability (track progress, skip completed, restart after interruption)
 - [ ] Documentation (docstrings, README)
 
 ## Testing
@@ -22,10 +22,9 @@ This checklist tracks the implementation status of all required features for a r
 - [x] Config file tests
 - [x] Error handling tests
 - [x] Title coverage test
-- [ ] Resumability test (pending feature)
+- [x] Resumability test (pending feature)
 
 ## Next Steps
-- [ ] Implement and validate resumability (schema, logic, test)
 - [ ] Add/validate documentation
 - [ ] Final review and integration
 
