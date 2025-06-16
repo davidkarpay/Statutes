@@ -185,14 +185,6 @@ def main():
     user_agent = cfg.get('user_agent') or "Palm Beach County Public Defender - assembling local statute database for public defense purposes. Contact: [your-email@pbcgov.org]"
     BASE_URL = "http://www.leg.state.fl.us/Statutes/"
     start_time = time.time()
-    result = fetch_html(INDEX_URL)
-    if not result or result[0] is None:
-        logger.error("Failed to fetch the index page.")
-        return
-    initial_soup, _ = result
-    title_links = get_title_links(initial_soup, required_titles)
-    total_titles = len(title_links)
-    logger.info(f"Found {total_titles} required Titles out of {len(required_titles)}.")
     conn = sqlite3.connect(db_file)
     cursor = conn.cursor()
     cursor.execute('''
@@ -213,6 +205,15 @@ def main():
         FOREIGN KEY (statute_id) REFERENCES Statutes (id)
     )''')
     conn.commit()
+    result = fetch_html(INDEX_URL)
+    if not result or result[0] is None:
+        logger.error("Failed to fetch the index page.")
+        conn.close()
+        return
+    initial_soup, _ = result
+    title_links = get_title_links(initial_soup, required_titles)
+    total_titles = len(title_links)
+    logger.info(f"Found {total_titles} required Titles out of {len(required_titles)}.")
     # Statutes processing loop (refactored for resumability)
     for idx, title_link in enumerate(title_links, 1):
         title_text = title_link['text']
