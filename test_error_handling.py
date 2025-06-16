@@ -1,6 +1,7 @@
 import unittest
 from unittest.mock import patch
 import sqlite3
+from bs4 import BeautifulSoup
 import Statutes_at_5 as statutes
 
 class TestErrorHandling(unittest.TestCase):
@@ -10,7 +11,10 @@ class TestErrorHandling(unittest.TestCase):
             self.assertEqual(result, (None, None))
 
     def test_db_error_handling(self):
-        with patch('sqlite3.connect', side_effect=sqlite3.DatabaseError('DB error')):
+        html = '<table id="maintable"></table>'
+        fake_soup = BeautifulSoup(html, 'html.parser')
+        with patch('sqlite3.connect', side_effect=sqlite3.DatabaseError('DB error')), \
+             patch('Statutes_at_5.fetch_html', return_value=(fake_soup, html.encode())):
             with self.assertRaises(sqlite3.DatabaseError):
                 # Try to run main, which should raise the DB error
                 statutes.main()
