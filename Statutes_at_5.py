@@ -28,14 +28,14 @@ import configparser
 logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s:%(message)s')
 logger = logging.getLogger(__name__)
 
-def fetch_html(url, retries=3, delay=1):
+def fetch_html(url, retries=3, delay=1, headers=None):
     """
     Fetch HTML content from a URL with retries and delay.
     Returns (BeautifulSoup object, raw content) or (None, None) on failure.
     """
     for i in range(retries):
         try:
-            response = requests.get(url, timeout=10)
+            response = requests.get(url, timeout=10, headers=headers)
             response.raise_for_status()
             return BeautifulSoup(response.content, 'html.parser'), response.content
         except requests.exceptions.RequestException:
@@ -183,6 +183,7 @@ def main():
     db_file = cfg.get('db_file') or "statutes.db"
     rate_limit_seconds = float(cfg.get('rate_limit_seconds', 1) or 1)
     user_agent = cfg.get('user_agent') or "Palm Beach County Public Defender - assembling local statute database for public defense purposes. Contact: [your-email@pbcgov.org]"
+    headers = {'User-Agent': user_agent}
     BASE_URL = "http://www.leg.state.fl.us/Statutes/"
     start_time = time.time()
     conn = sqlite3.connect(db_file)
@@ -205,7 +206,7 @@ def main():
         FOREIGN KEY (statute_id) REFERENCES Statutes (id)
     )''')
     conn.commit()
-    result = fetch_html(INDEX_URL)
+    result = fetch_html(INDEX_URL, headers=headers)
     if not result or result[0] is None:
         logger.error("Failed to fetch the index page.")
         conn.close()
@@ -219,7 +220,7 @@ def main():
         title_text = title_link['text']
         title_url = title_link['url']
         logger.info(f"Processing {title_text} ({title_url})...")
-        result = fetch_html(title_url)
+        result = fetch_html(title_url, headers=headers)
         if not result or result[0] is None:
             logger.warning(f"Failed to fetch {title_url}")
             continue
@@ -227,7 +228,7 @@ def main():
         chapter_links = get_chapter_links(title_soup)
         for chapter_link in chapter_links:
             chapter_url = chapter_link['url']
-            result = fetch_html(chapter_url)
+            result = fetch_html(chapter_url, headers=headers)
             if not result or result[0] is None:
                 logger.warning(f"Failed to fetch {chapter_url}")
                 continue
@@ -235,7 +236,7 @@ def main():
             statute_links = get_statute_links(chapter_soup)
             for statute_link in statute_links:
                 statute_url = statute_link['url']
-                result = fetch_html(statute_url)
+                result = fetch_html(statute_url, headers=headers)
                 if not result or result[0] is None:
                     logger.warning(f"Failed to fetch {statute_url}")
                     continue
